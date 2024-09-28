@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Chess Game</title>
+</head>
+<body>
+    <h1>Chess Game</h1>
+    <div id="board">
+        {{ board_svg|safe }}
+    </div>
+    <form id="moveForm" method="POST" action="/move">
+        <input type="text" name="move" placeholder="Enter your move (e.g., e2e4)" required>
+        <button type="submit">Move</button>
+    </form>
+    <form method="POST" action="/restart">
+        <button type="submit">Restart Game</button>
+    </form>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
