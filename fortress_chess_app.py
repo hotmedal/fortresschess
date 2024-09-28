@@ -1,13 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for
+import streamlit as st
 import chess
 import chess.svg
 import os
 
-app = Flask(__name__)
-board = chess.Board()
-fortress_declared = False
-fortress_agreed = False
-result = None
+def main()
+    board = chess.Board()
+    st.write(board)
+    fortress_declared = False
+    fortress_agreed = False
+    result = None
 
 @app.route('/')
 def index():
@@ -65,4 +66,4 @@ def restart():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    main()
