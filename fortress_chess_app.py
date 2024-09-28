@@ -1,69 +1,83 @@
 import streamlit as st
 import chess
 import chess.svg
-import os
 
-def main():
-    board = chess.Board()
-    st.write(board)
-    fortress_declared = False
-    fortress_agreed = False
-    result = None
+# Initialize board and game state
+if 'board' not in st.session_state:
+    st.session_state.board = chess.Board()
+if 'fortress_declared' not in st.session_state:
+    st.session_state.fortress_declared = False
+if 'fortress_agreed' not in st.session_state:
+    st.session_state.fortress_agreed = False
+if 'result' not in st.session_state:
+    st.session_state.result = None
 
-@app.route('/')
-def index():
-    global board, fortress_declared, fortress_agreed, result
-    svg_board = chess.svg.board(board, size=400)
-    return render_template('index.html', board_svg=svg_board, result=result,
-                           fortress_declared=fortress_declared, fortress_agreed=fortress_agreed)
+def display_board():
+    """Display the chess board as SVG."""
+    svg_board = chess.svg.board(st.session_state.board, size=400)
+    st.write(svg_board, unsafe_allow_html=True)
 
-@app.route('/move', methods=['POST'])
-def move():
-    global board, result
-    move_san = request.form.get('move')
-    
-    if result is not None:
-        return redirect(url_for('index'))
-    
+def handle_move(move_san):
+    """Handle chess moves."""
     try:
-        move = board.parse_san(move_san)
-        if move in board.legal_moves:
-            board.push(move)
+        move = st.session_state.board.parse_san(move_san)
+        if move in st.session_state.board.legal_moves:
+            st.session_state.board.push(move)
 
-            if board.is_checkmate():
-                result = "0-1" if board.turn else "1-0"
-            elif board.is_stalemate() or board.is_insufficient_material():
-                result = "0.5-0.5"
+            # Check for game-ending conditions
+            if st.session_state.board.is_checkmate():
+                st.session_state.result = "0-1" if st.session_state.board.turn else "1-0"
+            elif st.session_state.board.is_stalemate() or st.session_state.board.is_insufficient_material():
+                st.session_state.result = "0.5-0.5"
         else:
-            return redirect(url_for('index', error="Illegal move."))
+            st.error("Illegal move.")
     except ValueError:
-        return redirect(url_for('index', error="Invalid move format."))
-    
-    return redirect(url_for('index'))
+        st.error("Invalid move format.")
 
-@app.route('/declare_fortress')
 def declare_fortress():
-    global fortress_declared
-    if not fortress_declared and not board.is_game_over():
-        fortress_declared = True
-    return redirect(url_for('index'))
+    """Declare the fortress."""
+    if not st.session_state.fortress_declared and not st.session_state.board.is_game_over():
+        st.session_state.fortress_declared = True
 
-@app.route('/agree_fortress')
 def agree_fortress():
-    global fortress_declared, fortress_agreed, result
-    if fortress_declared and not fortress_agreed:
-        fortress_agreed = True
-        result = "1.5-0"
-    return redirect(url_for('index'))
+    """Agree to the fortress."""
+    if st.session_state.fortress_declared and not st.session_state.fortress_agreed:
+        st.session_state.fortress_agreed = True
+        st.session_state.result = "1.5-0"
 
-@app.route('/restart')
-def restart():
-    global board, fortress_declared, fortress_agreed, result
-    board.reset()
-    fortress_declared = False
-    fortress_agreed = False
-    result = None
-    return redirect(url_for('index'))
+def restart_game():
+    """Restart the game."""
+    st.session_state.board.reset()
+    st.session_state.fortress_declared = False
+    st.session_state.fortress_agreed = False
+    st.session_state.result = None
 
-if __name__ == '__main__':
-    main()
+# Streamlit UI
+st.title("Fortress Chess Game")
+
+# Display the board
+display_board()
+
+# Input for move
+move_input = st.text_input("Enter your move (e.g., e4, Nf3):")
+if st.button("Make Move"):
+    if move_input:
+        handle_move(move_input)
+
+# Buttons for fortress actions
+if st.button("Declare Fortress"):
+    declare_fortress()
+st.write(f"Fortress Declared: {st.session_state.fortress_declared}")
+
+if st.button("Agree to Fortress"):
+    agree_fortress()
+st.write(f"Fortress Agreed: {st.session_state.fortress_agreed}")
+
+# Show result if the game is over
+if st.session_state.result is not None:
+    st.write(f"Result: {st.session_state.result}")
+
+# Restart button
+if st.button("Restart Game"):
+    restart_game()
+
