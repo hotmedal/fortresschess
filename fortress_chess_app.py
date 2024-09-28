@@ -3,7 +3,7 @@ import chess
 import chess.svg
 import os
 
-def main()
+def main():
     board = chess.Board()
     st.write(board)
     fortress_declared = False
